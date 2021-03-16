@@ -1,1 +1,1 @@
-# Discor_Bot
+# Discord_Bot
