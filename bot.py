@@ -7,7 +7,7 @@ from discord.ext import commands, ipc
 from dotenv import load_dotenv
 from GameRoom import GameRoom
 from flask import Flask
-
+from discord.ext.commands import CommandNotFound
 
 app = Flask(__name__)
 
@@ -44,10 +44,12 @@ class client(commands.Bot):
 
 client = client(command_prefix=".", intents=discord.Intents.default())
 
+
 # Get the amount of channel the bot is in
 @client.ipc.route()
 async def get_guild_count(data):
     return len(client.guilds)  # returns the len of the guilds to the client
+
 
 # Get the guild(channel) id
 @client.ipc.route()
@@ -56,6 +58,7 @@ async def get_guild_ids(data):
     for guild in client.guilds:
         final.append(guild.id)
     return final  # returns the guild ids to the client
+
 
 # Get guild(channel) info(data)
 @client.ipc.route()
@@ -71,6 +74,7 @@ async def get_guild(data):
 
     return guild_data
 
+
 # print out all users in the channel(guild) that is active(online status)
 @client.command()
 @commands.has_permissions(manage_messages=True)
@@ -82,11 +86,18 @@ async def members(ctx):
         print(member.name)
     await ctx.send("✅")
 
+
 # Print I am ready when the bot is ready to be used
 @client.event
 async def on_ready():
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="over you"))
     print('I am ready.')
+
+    @client.event
+    async def on_command_error(ctx, error):
+        if isinstance(error, CommandNotFound):
+            await ctx.send("Command not found ")
+
 
 
 @client.command(aliases=['c'])
@@ -123,6 +134,7 @@ async def unban(ctx, *, member):
             await ctx.send(member_name + " has been unbanned!")
             return
     await ctx.send(member + " was not found")
+
 
 # Random number between 1 and 1000
 @client.command()
@@ -273,10 +285,12 @@ async def createroom(ctx):
     for player in players:
         await player.add_roles(authorizedRole)
     # make an embed(a type of message) that's send into the created game room channel with instructions
-    MessageEmbed = discord.Embed(title=" Welcome to " + channelName + ".",color = discord.Colour.random())
-    MessageEmbed.add_field(name="Here u can play few of our games", value="```Currently we have 2 games tick-tack-toe and SnakeEeyes. To play one of the games just write '!start snakeeyes' or '!start tictactoe'.```")
+    MessageEmbed = discord.Embed(title=" Welcome to " + channelName + ".", color=discord.Colour.random())
+    MessageEmbed.add_field(name="Here u can play few of our games",
+                           value="```Currently we have 2 games tick-tack-toe and SnakeEeyes. To play one of the games just write '!start snakeeyes' or '!start tictactoe'.```")
     print(f'{channelName} Created')
     await channel.send(embed=MessageEmbed)
+
 
 # make command to delete room and the role
 @client.command()
@@ -307,6 +321,21 @@ async def on_message(message):
             await message.channel.send(output)
 
 
+@client.command()
+async def dance(ctx):
+    voice = await ctx.author.voice.channel.connect()
+    voice.play(discord.FFmpegPCMAudio('dance.mp3'))
+    for x in range(0, 5):
+        await ctx.send("https://tenor.com/view/dancing-dog-gif-13304250")
+
+
+@client.command()
+async def shrek(ctx):
+    voice = await ctx.author.voice.channel.connect()
+    voice.play(discord.FFmpegPCMAudio('shrek.mp3'))
+    await ctx.send("https://tenor.com/view/dance-shrek-dancing-gif-12767568")
+    await ctx.send("https://tenor.com/view/shrek-mehdi-shrek-dance-wati-by-night-maitre-gims-gif-19789528")
+    await ctx.send("https://tenor.com/view/shrek-funny-dance-gif-14076556")
 
 @client.command()
 async def play(ctx, url: str):
